@@ -10,7 +10,7 @@
 4、解压后，使用eclipse，Import -> Existing Maven Projects -> Next ->选择解压后的文件夹-> Finsh，OK done!
 
 ### 项目结构介绍
-<p>
+```
 Spring Boot的基础结构共三个文件:
 	src/main/java 程序开发以及主程序入口
 	src/main/resources 配置文件
@@ -34,7 +34,7 @@ spingboot建议的目录结果如下：
 	2、entity和dao目录主要用于实体（Entity）与数据访问层（Repository）
 	3、service 层主要是业务类代码
 	4、controller 负责页面访问控制
-</p>
+```
 
 ### 引入web模块（基础pom.xml）
 ```xml
