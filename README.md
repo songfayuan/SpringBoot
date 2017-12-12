@@ -5,7 +5,7 @@
 ### maven构建项目
 1、访问http://start.spring.io/
 2、选择构建工具Maven Project、Spring Boot版本1.3.6以及一些工程基本信息，点击“Switch to the full version.”java版本选择1.8，可参考下图所示：
-http://www.ityouknow.com/assets/images/2016/springboot1.png
+![](http://www.ityouknow.com/assets/images/2016/springboot1.png)
 
 ### 基础pom.xml
 ```xml
