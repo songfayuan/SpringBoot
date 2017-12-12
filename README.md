@@ -1,12 +1,12 @@
-#Spring Boot Demo
+# Spring Boot Demo
 Springboot modules
 
-##项目搭建
+## 项目搭建
 
-###pom.xml
+### pom.xml
 
 
-###配置日志输出
+### 配置日志输出
 直接在resource下添加logback.xml即可，具体配置内容如下：
 
 ```xml
