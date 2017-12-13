@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import com.songfayuan.springBoot.dao.UserDao;
 import com.songfayuan.springBoot.entity.UserEntity;
 import com.songfayuan.springBoot.service.UserService;
+import com.songfayuan.springBoot.utils.Page;
+import com.songfayuan.springBoot.utils.Response;
 
 /**
  * 描述：
@@ -50,6 +52,21 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void deleteUser(Integer userId) {
 		this.userDao.deleteUser(userId);
+	}
+
+	@Override
+	public Integer getUserCount() {
+		return this.userDao.getUserCount();
+	}
+
+	@Override
+	public Response findUserListByPage(Integer page, Integer pageSize) {
+		Integer offset = page > 0 ? page * pageSize : 0;
+		List<UserEntity> list = this.userDao.findUserListByPage(offset, pageSize);
+		Integer rows = this.userDao.findRows();
+		Page<UserEntity> pagelist = new Page<>(page, pageSize, rows);
+		pagelist.setData(list);
+		return Response.success(pagelist);
 	}
 
 }

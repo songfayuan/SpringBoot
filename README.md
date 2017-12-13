@@ -998,6 +998,149 @@ Controller中用到的Response为自己封装，具体查看源码。
 
 至此，我们成功的将springboot和mybatis整合在一起，并且实现了简单的增删改查。
 
+### 自定义分页查询
+自定义分页工具类：
+Page
+```java
+package com.songfayuan.springBoot.utils;
+
+import java.util.List;
+
+/**
+ * 描述：分页工具
+ * @author songfayuan
+ * 2017年12月13日下午9:11:45
+ * @param <T>
+ */
+public class Page<T> {
+	List<T> data;
+	Integer total;
+	Integer start;
+	Integer pageSize = 10;
+	Integer resultCount;
+
+	public static final int DEFAULE_PAGESIZE = 10;
+
+	public Page(Integer start, Integer pageSize, Integer resultCount) {
+		super();
+		this.total = resultCount / pageSize + (resultCount % pageSize > 0 ? 1 : 0);
+		this.start = start;
+		this.pageSize = pageSize;
+		this.resultCount = resultCount;
+	}
+
+	public Page() {
+		super();
+	}
+
+	public Integer getTotal() {
+		return total;
+	}
+
+	public void setTotal(Integer total) {
+		this.total = total;
+	}
+
+	public List<T> getData() {
+		return data;
+	}
+
+	public void setData(List<T> data) {
+		this.data = data;
+	}
+
+	public Integer getStart() {
+		return start;
+	}
+
+	public void setStart(Integer start) {
+		this.start = start;
+	}
+
+	public Integer getPageSize() {
+		return pageSize;
+	}
+
+	public void setPageSize(Integer pageSize) {
+		this.pageSize = pageSize;
+	}
+
+	public Integer getResultCount() {
+		return resultCount;
+	}
+
+	public void setResultCount(Integer resultCount) {
+		this.resultCount = resultCount;
+	}
+
+}
+```
+
+在UserController中加入如下代码：
+```java
+   /**
+	 * 描述：分页查询用户列表
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:25:11
+	 */
+	@RequestMapping("/findUserListByPage")
+	public Response findUserListByPage(Integer page, Integer pageSize){
+		return this.userService.findUserListByPage(page, pageSize);
+	}
+```
+
+在UserService接口中添加如下代码：
+```java
+   /**
+	 * 描述：分页查询用户列表
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:25:40
+	 */
+	public Response findUserListByPage(Integer page, Integer pageSize);
+```
+
+在UserServiceImpl实现类中添加如下代码：
+```java
+	@Override
+	public Response findUserListByPage(Integer page, Integer pageSize) {
+		Integer offset = page > 0 ? page * pageSize : 0;
+		List<UserEntity> list = this.userDao.findUserListByPage(offset, pageSize);
+		Integer rows = this.userDao.findRows();
+		Page<UserEntity> pagelist = new Page<>(page, pageSize, rows);
+		pagelist.setData(list);
+		return Response.success(pagelist);
+	}
+```
+
+在UserDao接口中添加如下代码：
+```java
+	/**
+	 * 描述：分页查询用户列表
+	 * @param offset
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:25:55
+	 */
+	@Select("select * from user order by id limit #{offset},#{pageSize}")
+	public List<UserEntity> findUserListByPage(@Param("offset") Integer offset, @Param("pageSize") Integer pageSize);
+
+	/**
+	 * 描述：查询用户数量
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:26:03
+	 */
+	@Select("select count(id) from user")
+	public Integer findRows();
+```
+至此，分页查询功能搞定。
 
 ===========【end】============
 * * *

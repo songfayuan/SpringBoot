@@ -39,7 +39,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午5:40:01
 	 */
-	@RequestMapping("findUserList")
+	@RequestMapping("/findUserList")
 	public Response findUserList(){
 		List<UserEntity> list =  this.userService.findUserList();
 		return Response.success(list);
@@ -52,7 +52,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午5:54:41
 	 */
-	@RequestMapping("findUserById")
+	@RequestMapping("/findUserById")
 	public Response findUserById(Integer userId){
 		UserEntity user = this.userService.findUserById(userId);
 		return Response.success(user);
@@ -65,7 +65,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午6:12:05
 	 */
-	@RequestMapping("addUser")
+	@RequestMapping("/addUser")
 	public Response saveUser(UserEntity user){
 		this.userService.saveUser(user);
 		return Response.successResponse("添加成功");
@@ -78,16 +78,48 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午6:19:52
 	 */
-	@RequestMapping("updateUser")
+	@RequestMapping("/updateUser")
 	public Response updateUser(UserEntity user){
 		this.userService.updateUser(user);
 		return Response.successResponse("修改成功");
 	}
 	
-	@RequestMapping("deleteUserById")
+	/**
+	 * 描述：根据id删除用户数据
+	 * @param userId
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午8:14:05
+	 */
+	@RequestMapping("/deleteUserById")
 	public Response deleteUser(Integer userId){
 		this.userService.deleteUser(userId);
 		return Response.successResponse("删除成功");
+	}
+	
+	/**
+	 * 描述：查询用户数
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:02:10
+	 */
+	@RequestMapping("/getUserCount")
+	public Response getUserCount(){
+		Integer rows = this.userService.getUserCount();
+		return Response.success(rows);
+	}
+	
+	/**
+	 * 描述：分页查询用户列表
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:25:11
+	 */
+	@RequestMapping("/findUserListByPage")
+	public Response findUserListByPage(Integer page, Integer pageSize){
+		return this.userService.findUserListByPage(page, pageSize);
 	}
 	
 }

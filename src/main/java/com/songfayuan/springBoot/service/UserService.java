@@ -10,6 +10,7 @@ package com.songfayuan.springBoot.service;
 import java.util.List;
 
 import com.songfayuan.springBoot.entity.UserEntity;
+import com.songfayuan.springBoot.utils.Response;
 
 /**
  * 描述：
@@ -51,6 +52,30 @@ public interface UserService {
 	 */
 	public void updateUser(UserEntity user);
 
+	/**
+	 * 描述：根据id删除用户数据
+	 * @param userId
+	 * @author songfayuan
+	 * 2017年12月13日下午8:14:25
+	 */
 	public void deleteUser(Integer userId);
+
+	/**
+	 * 描述：查询用户数
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:05:20
+	 */
+	public Integer getUserCount();
+
+	/**
+	 * 描述：分页查询用户列表
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午9:25:40
+	 */
+	public Response findUserListByPage(Integer page, Integer pageSize);
 
 }
