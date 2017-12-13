@@ -587,3 +587,414 @@ public class MailServiceTest {
 }
 
 ```
+
+## SpringBoot整合mybatis及简单案例实现
+### 添加依赖包
+在pom.xml中添加mybatis的依赖包，如下：
+```xml
+		<!-- 整合mybatis -->
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>1.3.1</version>
+		</dependency>
+		<!-- mysql jdbc驱动 -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<scope>runtime</scope>
+		</dependency> 
+```
+
+### 添加相关配置
+在application.properties添加如下配置：
+```xml
+# mybatis配置
+mybatis.type-aliases-package=com.songfayuan.springBoot.entity
+# mybatis设置自动驼峰命名转换
+mybatis.configuration.mapUnderscoreToCamelCase=true
+# mysql配置
+spring.datasource.driverClassName = com.mysql.jdbc.Driver
+spring.datasource.url = jdbc:mysql://localhost:3306/spring_boot?useUnicode=true&characterEncoding=utf-8
+spring.datasource.username = root
+spring.datasource.password = 123456
+```
+
+在启动类Application中添加对包的扫描配置@MapperScan如下：
+```java
+@SpringBootApplication
+@MapperScan("com.songfayuan.springBoot.dao")
+public class Application {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+}
+```
+
+### 创建数据库
+新建数据库spring_boot，并创建user表，字段名称如下：
+```
+id	int	11	0	0	-1	0	0	0		0					-1	0
+user_name	varchar	50	0	-1	0	0	0	0		0	用户名	utf8	utf8_general_ci		0	0
+pass_word	varchar	255	0	-1	0	0	0	0		0	用户密码	utf8	utf8_general_ci		0	0
+sex	int	11	0	-1	0	0	0	0		0	性别（0 男 ，1女）				0	0
+age	int	11	0	-1	0	0	0	0		0	年龄				0	0
+phone	varchar	50	0	-1	0	0	0	0		0	电话号码	utf8	utf8_general_ci		0	0
+email	varchar	50	0	-1	0	0	0	0		0	电子邮件	utf8	utf8_general_ci		0	0
+```
+
+### 创建数据库映射实体
+在com.songfayuan.springBoot.entity下创建UserEntity实体类，如下：
+```java
+package com.songfayuan.springBoot.entity;
+
+import java.io.Serializable;
+
+/**
+ * 描述：
+ * @author songfayuan
+ * 2017年12月13日下午4:57:46
+ */
+public class UserEntity implements Serializable {
+
+	private static final long serialVersionUID = 505461756494370991L;
+	
+	private Integer id;
+	
+	private String userName;
+	
+	private String passWord;
+	
+	private Integer age;
+	
+	private Integer sex;
+	
+	private String phone;
+	
+	private String email;
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getPassWord() {
+		return passWord;
+	}
+
+	public void setPassWord(String passWord) {
+		this.passWord = passWord;
+	}
+
+	public Integer getAge() {
+		return age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+	public Integer getSex() {
+		return sex;
+	}
+
+	public void setSex(Integer sex) {
+		this.sex = sex;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+}
+```
+### 创建dao接口
+在com.songfayuan.springBoot.dao下创建UserDao接口，且通过注解方式实现对数据库的增删改查操作，具体代码如下：
+```java
+package com.songfayuan.springBoot.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+
+import com.songfayuan.springBoot.entity.UserEntity;
+
+/**
+ * 描述：
+ * @author songfayuan
+ * 2017年12月13日下午5:11:36
+ */
+public interface UserDao {
+
+	/**
+	 * 描述：查询所有用户列表（不分页）
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午5:40:58
+	 */
+	@Select("select * from user")
+	public List<UserEntity> findUserList();
+
+	/**
+	 * 描述：根据id获取一条用户数据
+	 * @param userId
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午6:11:57
+	 */
+	@Select("select * from user where id = #{userId}")
+	public UserEntity findUserById(Integer userId);
+
+	/**
+	 * 描述：添加用户
+	 * @param user
+	 * @author songfayuan
+	 * 2017年12月13日下午6:12:25
+	 */
+	@Insert("insert into user(user_name, pass_word, sex, age, phone, email) values(#{userName}, #{passWord}, #{sex}, #{age}, #{phone}, #{email})")
+	public void saveUser(UserEntity user);
+
+	/**
+	 * 描述：根据id更新用户数据
+	 * @param user
+	 * @author songfayuan
+	 * 2017年12月13日下午6:20:15
+	 */
+	@Update("update user set user_name=#{userName}, pass_word=#{passWord}, sex=#{sex}, age=#{age}, phone=#{phone}, email=#{email} where id = #{id}")
+	public void updateUser(UserEntity user);
+
+	@Delete("delete from user where id = #{userId}")
+	public void deleteUser(Integer userId);
+
+}
+```
+
+### 创建service接口和其实现类
+在com.songfayuan.springBoot.service下创建Service接口，在com.songfayuan.springBoot.service.impl下创建Serviceimpl实现类：
+
+UserService
+```java
+package com.songfayuan.springBoot.service;
+
+import java.util.List;
+
+import com.songfayuan.springBoot.entity.UserEntity;
+
+/**
+ * 描述：
+ * @author songfayuan
+ * 2017年12月13日下午5:08:58
+ */
+public interface UserService {
+
+	/**
+	 * 描述：查询所有用户列表（不分页）
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午5:40:32
+	 */
+	public List<UserEntity> findUserList();
+
+	/**
+	 * 描述：根据id获取一条用户数据
+	 * @param userId
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午5:55:04
+	 */
+	public UserEntity findUserById(Integer userId);
+
+	/**
+	 * 描述：添加用户
+	 * @param user
+	 * @author songfayuan
+	 * 2017年12月13日下午6:12:16
+	 */
+	public void saveUser(UserEntity user);
+
+	/**
+	 * 描述：根据id更新用户数据
+	 * @param user
+	 * @author songfayuan
+	 * 2017年12月13日下午6:20:07
+	 */
+	public void updateUser(UserEntity user);
+
+	public void deleteUser(Integer userId);
+
+}
+```
+
+UserServiceImpl
+```java
+package com.songfayuan.springBoot.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.songfayuan.springBoot.dao.UserDao;
+import com.songfayuan.springBoot.entity.UserEntity;
+import com.songfayuan.springBoot.service.UserService;
+
+/**
+ * 描述：
+ * @author songfayuan
+ * 2017年12月13日下午5:09:45
+ */
+@Service
+public class UserServiceImpl implements UserService {
+	
+	@Autowired
+	private UserDao userDao;
+
+	@Override
+	public List<UserEntity> findUserList() {
+		return this.userDao.findUserList();
+	}
+
+	@Override
+	public UserEntity findUserById(Integer userId) {
+		return this.userDao.findUserById(userId);
+	}
+
+	@Override
+	public void saveUser(UserEntity user) {
+		this.userDao.saveUser(user);
+	}
+
+	@Override
+	public void updateUser(UserEntity user) {
+		this.userDao.updateUser(user);
+	}
+
+	@Override
+	public void deleteUser(Integer userId) {
+		this.userDao.deleteUser(userId);
+	}
+
+}
+```
+
+### 创建Controller
+在com.songfayuan.springBoot.controller下创建UserController：
+```java
+package com.songfayuan.springBoot.controller;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.songfayuan.springBoot.entity.UserEntity;
+import com.songfayuan.springBoot.service.UserService;
+import com.songfayuan.springBoot.utils.Response;
+
+/**
+ * 描述：用户
+ * @author songfayuan
+ * 2017年12月13日下午5:05:47
+ */
+@RestController
+@RequestMapping("/user")
+public class UserController {
+
+	private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+	
+	@Autowired
+	private UserService userService;
+	
+	/**
+	 * 描述：查询所有用户列表（不分页）
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午5:40:01
+	 */
+	@RequestMapping("findUserList")
+	public Response findUserList(){
+		List<UserEntity> list =  this.userService.findUserList();
+		return Response.success(list);
+	}
+	
+	/**
+	 * 描述：根据id获取一条用户数据
+	 * @param userId
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午5:54:41
+	 */
+	@RequestMapping("findUserById")
+	public Response findUserById(Integer userId){
+		UserEntity user = this.userService.findUserById(userId);
+		return Response.success(user);
+	}
+	
+	/**
+	 * 描述：添加用户
+	 * @param user
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午6:12:05
+	 */
+	@RequestMapping("addUser")
+	public Response saveUser(UserEntity user){
+		this.userService.saveUser(user);
+		return Response.successResponse("添加成功");
+	}
+	
+	/**
+	 * 描述：根据id更新用户数据
+	 * @param user
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午6:19:52
+	 */
+	@RequestMapping("updateUser")
+	public Response updateUser(UserEntity user){
+		this.userService.updateUser(user);
+		return Response.successResponse("修改成功");
+	}
+	
+	@RequestMapping("deleteUserById")
+	public Response deleteUser(Integer userId){
+		this.userService.deleteUser(userId);
+		return Response.successResponse("删除成功");
+	}
+	
+}
+```
+Controller中用到的Response为自己封装，具体查看源码。
+
+至此，我们成功的将springboot和mybatis整合在一起，并且实现了简单的增删改查。
+
