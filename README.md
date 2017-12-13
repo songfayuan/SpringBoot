@@ -998,3 +998,19 @@ Controller中用到的Response为自己封装，具体查看源码。
 
 至此，我们成功的将springboot和mybatis整合在一起，并且实现了简单的增删改查。
 
+
+===========【end】============
+* * *
+### 更多的功能正在编辑中...
+更多功能正在更新中.....敬请期待！
+<a target="_blank" href="http://wpa.qq.com/msgrd?v=3&amp;uin=1414798079&amp;site=qq&amp;menu=yes"><img border="0" src="http://wpa.qq.com/pa?p=2:1414798079:51" alt="点击这里给我发消息" title="点击这里给我发消息" /></a>
+
+[示例代码-github](https://github.com/songfayuan/spring-boot)
+
+### 打赏
+分享不易，开心的话，可以请我喝杯咖啡哦O(∩_∩)O~
+
+![](http://images.cnblogs.com/cnblogs_com/songfayuan/1048721/o_o_alipay.jpg)
+
+![](http://images.cnblogs.com/cnblogs_com/songfayuan/1048721/o_o_webChat.png)
+
