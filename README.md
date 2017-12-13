@@ -293,3 +293,297 @@ public class HelloWorldControlerTests {
 ```
 到现在为止，SpringBoot基本项目搭建完毕，你可以启动并成功运行程序，接下来，便可以在此基础上扩展更多的功能模块。
 
+## mail模块
+### 添加依赖包
+在pom.xml中添加依赖包，配置如下：
+```xml
+		<!-- mail模块 -->
+	    <dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>RELEASE</version>
+		</dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+        <!-- 模板引擎 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+```
+
+###  添加mail相关配置
+在application.properties中添加mail相关配置，如下：
+```xml
+spring.mail.host=smtp.163.com
+spring.mail.username=songfayuan1993@163.com
+spring.mail.password=123456(密码)
+spring.mail.default-encoding=UTF-8
+
+mail.fromMail.addr=songfayuan1993@163.com
+```
+
+### 创建邮件模板
+在resources/templates下创建邮件模板emailTemplate.html，自定义样式如下：
+```xml
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>邮件模板</title>
+    </head>
+    <body>
+       	 您好,这是验证邮件,请点击下面的链接完成验证,<br/>
+        <a href="#" th:href="@{ http://www.songfayuan.com/mail/{id}(id=${id}) }">激活账号</a>
+    </body>
+</html>
+```
+
+### 编辑mail接口和具体实现
+MailService
+```java
+package com.songfayuan.springBoot.service;
+
+/**
+ * 描述：发送邮件接口
+ * @author songfayuan
+ * 2017年12月13日上午10:51:53
+ */
+public interface MailService {
+
+	/**
+	 * 描述：发送普通（文本）邮件
+	 * @param to
+	 * @param subject
+	 * @param content
+	 * @author songfayuan
+	 * 2017年12月13日上午11:08:12
+	 */
+	public void sendSimpleMail(String to, String subject, String content);
+	
+	/**
+	 * 描述：发送html邮件
+	 * @param to
+	 * @param subject
+	 * @param content
+	 * @author songfayuan
+	 * 2017年12月13日上午11:07:57
+	 */
+	public void sendHtmlMail(String to, String subject, String content);
+	
+	/**
+	 * 描述：发送附件邮件
+	 * @param to
+	 * @param subject
+	 * @param content
+	 * @param filePath
+	 * @author songfayuan
+	 * 2017年12月13日上午11:07:41
+	 */
+	public void sendAttachmentMail(String to, String subject, String content, String filePath);
+	
+	/**
+	 * 描述：发送正文中有静态资源（图片）的邮件
+	 * @param to
+	 * @param subject
+	 * @param content
+	 * @param resourcePath
+	 * @param contentId
+	 * @author songfayuan
+	 * 2017年12月13日上午11:25:31
+	 */
+	public void sendInlineResourceMail(String to, String subject, String content, String resourcePath, String contentId);
+	
+}
+
+```
+
+MailServiceImpl
+```java
+package com.songfayuan.springBoot.service.impl;
+
+import java.io.File;
+
+import javax.mail.internet.MimeMessage;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import com.songfayuan.springBoot.service.MailService;
+
+/**
+ * 描述：发送邮件具体实现类
+ * @author songfayuan
+ * 2017年12月13日上午11:28:56
+ */
+@Service
+public class MailServiceImpl implements MailService {
+	
+	private final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
+	
+	@Autowired
+	private JavaMailSender mailSender;
+	
+	@Value("${mail.fromMail.address}")
+	private String from;
+
+	@Override
+	public void sendSimpleMail(String to, String subject, String content) {
+		SimpleMailMessage message = new SimpleMailMessage();
+		message.setFrom(from);
+		message.setTo(to);
+		message.setSubject(subject);
+		message.setText(content);
+		try {
+			mailSender.send(message);
+			logger.info("发送普通邮件成功...");
+		} catch (Exception e) {
+			logger.error("发送普通邮件时发生异常...", e);
+		}
+	}
+
+	@Override
+	public void sendHtmlMail(String to, String subject, String content) {
+		MimeMessage message = mailSender.createMimeMessage();
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(message, true); //true表示需要创建一个multipart message
+			helper.setFrom(from);
+			helper.setTo(to);
+			helper.setSubject(subject);
+			helper.setText(content, true);
+			mailSender.send(message);
+			logger.info("发送html邮件成功...");
+		} catch (Exception e) {
+			logger.error("发送html邮件时发生异常...", e);
+		}
+	}
+
+	@Override
+	public void sendAttachmentMail(String to, String subject, String content, String filePath) {
+		MimeMessage message = mailSender.createMimeMessage();
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
+			helper.setFrom(from);
+			helper.setTo(to);
+			helper.setSubject(subject);
+			helper.setText(content, true);
+			FileSystemResource file = new FileSystemResource(new File(filePath));
+			String fileName = filePath.substring(filePath.lastIndexOf(File.separator));
+			helper.addAttachment(fileName, file);
+			mailSender.send(message);
+			logger.info("发送附件邮件成功...");
+		} catch (Exception e) {
+			logger.error("发送附件邮件时发生异常...", e);
+		}
+	}
+
+	@Override
+	public void sendInlineResourceMail(String to, String subject, String content, String resourcePath, String contentId) {
+		MimeMessage message = mailSender.createMimeMessage();
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
+			helper.setFrom(from);
+			helper.setTo(to);
+			helper.setSubject(subject);
+			helper.setText(content, true);
+			FileSystemResource resource = new  FileSystemResource(new File(resourcePath));
+			helper.addInline(contentId, resource);
+			mailSender.send(message);
+			logger.info("发送嵌入静态资源的邮件成功...");
+		} catch (Exception e) {
+			logger.error("发送嵌入静态资源的邮件时发生异常...", e);
+		}
+	}
+
+}
+
+```
+
+### 编写测试用例
+
+```java
+package com.songfayuan.springBoot.service;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+
+/**
+ * 描述：邮件模板单元测试
+ * @author songfayuan
+ * 2017年12月13日下午2:39:52
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class MailServiceTest {
+
+	@Autowired
+	private MailService mailService;
+	
+	@Autowired
+	private TemplateEngine templateEngine;
+	
+	//接受者账户
+	private String to = "1414798079@qq.com"; 
+	
+	@Test
+	public void testSimpleMail() throws Exception{
+		String subject = "测试发送普通（文本）邮件";
+		String content = "这是一封用于测试发送普通文本邮件的信息...";
+		mailService.sendSimpleMail(to, subject, content);
+	}
+	
+	@Test
+	public void testHtmlMail() throws Exception{
+		String subject = "测试发送html邮件";
+		String content="<html>\n" +
+                "<body>\n" +
+                "    <h3>hello world ! 这是一封html邮件!</h3>\n" +
+                "</body>\n" +
+                "</html>";
+		mailService.sendHtmlMail(to, subject, content);
+	}
+	
+	@Test
+	public void sendAttachmentMail() throws Exception{
+		String subject = "测试发送带附件的邮件";
+		String content = "这是一封用于测试发送带附件文件邮件的信息...";
+		String filePath="D:\\Icon Manager.rar";
+		mailService.sendAttachmentMail(to, subject, content, filePath);
+	}
+	
+	@Test
+	public void sendInlineResourceMail() throws Exception{
+		String contentId = "demo01";
+		String subject = "测试发送有图片的邮件";
+		String content = "<html><body>这是一封用于测试发送有图片邮件的信息：<img src=\'cid:" + contentId + "\' ></body></html>";
+		String resourcePath = "D:\\123456.png";
+		mailService.sendInlineResourceMail(to, subject, content, resourcePath, contentId);
+	}
+	
+	@Test 
+	public void sendTemplateMail() throws Exception{
+		String subject = "测试发送自定义模板邮件";
+		Context context = new Context();
+		context.setVariable("id", "demo002");
+		String content = templateEngine.process("emailTemplate", context);
+		mailService.sendHtmlMail(to, subject, content);
+	}
+	
+}
+
+```
