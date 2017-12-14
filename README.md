@@ -994,7 +994,97 @@ public class UserController {
 	
 }
 ```
-Controller中用到的Response为自己封装，具体查看源码。
+Controller中用到的Response为自己封装，具体代码如下：
+```java
+package com.songfayuan.springBoot.utils;
+
+public class Response {
+	protected int code;
+	protected String msg;
+	protected Object data;
+
+	private static final int SUCCESS_CODE = 200;
+	private static final String SUCCESS_MSG = "success";
+	private static final int ERROR_CODE = 500;
+	private static final String ERROR_MSG = "服务器内部异常，请联系技术人员！";// 将error改成了内容信息
+
+	public static Response success() {
+		Response resp = new Response();
+		resp.code = (SUCCESS_CODE);
+		resp.msg = (SUCCESS_MSG);
+		return resp;
+	}
+
+	public static Response successResponse(String msg) {
+		Response resp = new Response();
+		resp.code = SUCCESS_CODE;
+		resp.msg = msg;
+		return resp;
+	}
+
+	public static Response error() {
+		Response resp = new Response();
+		resp.code = (ERROR_CODE);
+		resp.msg = (ERROR_MSG);
+		return resp;
+	}
+
+	public static Response errorResponse(String msg) {
+		Response resp = new Response();
+		resp.code = ERROR_CODE;
+		resp.msg = msg;
+		return resp;
+	}
+
+	public static Response response(int code, String msg) {
+		Response resp = new Response();
+		resp.code = (code);
+		resp.msg = (msg);
+		return resp;
+	}
+
+	public static Response response(int code, String msg, Object data) {
+		Response resp = new Response();
+		resp.code = (code);
+		resp.msg = (msg);
+		resp.data = data;
+		return resp;
+	}
+
+	public static Response success(Object data) {
+		Response resp = new Response();
+		resp.code = (SUCCESS_CODE);
+		resp.msg = (SUCCESS_MSG);
+		resp.data = data;
+		return resp;
+	}
+
+	public static Response error(Object data) {
+		Response resp = new Response();
+		resp.code = (ERROR_CODE);
+		resp.msg = (ERROR_MSG);
+		resp.data = data;
+		return resp;
+	}
+
+	public int getCode() {
+		return code;
+	}
+
+	public String getMsg() {
+		return msg;
+	}
+
+	public Object getData() {
+		return data;
+	}
+
+	public void setData(Object data) {
+		this.data = data;
+	}
+
+}
+```
 
 至此，我们成功的将springboot和mybatis整合在一起，并且实现了简单的增删改查。
 
@@ -1141,6 +1231,426 @@ public class Page<T> {
 	public Integer findRows();
 ```
 至此，分页查询功能搞定。
+
+## SpringBoot整合AOP（案例：使用 AOP 切面的方式记录 web 请求日志）
+###添加依赖
+pom.xml
+```xml
+		<!-- aop -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		<!-- json -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>1.2.8</version>
+		</dependency>
+		<!-- UserAgent工具类：https://mvnrepository.com/artifact/nl.bitwalker/UserAgentUtils -->
+		<dependency>
+		    <groupId>nl.bitwalker</groupId>
+		    <artifactId>UserAgentUtils</artifactId>
+		    <version>1.2.4</version>
+		</dependency>
+```
+
+### 编辑切面
+新建数据库log表：
+```
+id	int	11	0	0	-1	0	0	0		0	日志id				-1	0
+create_time	timestamp	0	0	-1	0	0	0	0	CURRENT_TIMESTAMP	0	日志产生时间				0	0
+log_type	int	11	0	-1	0	0	0	0		0	日志类型（1601信息，1602异常）				0	0
+content	text	0	0	-1	0	0	0	0		0	日志内容	utf8	utf8_general_ci		0	0
+user_id	int	11	0	-1	0	0	0	0		0	操作人员				0	0
+```
+
+### 编辑切面
+在com.songfayuan.springBoot.aspectj下编辑切面，按自己的需求造出自己的代码：
+```java
+package com.songfayuan.springBoot.aspectj;
+
+import java.math.BigInteger;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.alibaba.fastjson.JSONObject;
+import com.songfayuan.springBoot.entity.LogEntity;
+import com.songfayuan.springBoot.service.LogService;
+
+import nl.bitwalker.useragentutils.UserAgent;
+
+
+
+/**
+ * 描述：【声明切面】记录请求日志
+ * @author songfayuan
+ * 2017年12月14日上午11:26:24
+ */
+@Aspect
+@Service
+public class RequestLogAspect {
+	
+	private static final String START_TIME = "start_request_time";
+
+	private static final Logger logger = LoggerFactory.getLogger(RequestLogAspect.class);
+	
+	//注入Service用于把日志保存数据库
+	@Autowired
+	private LogService logService;
+
+	//声明controller层切入点
+	@Pointcut("execution(* com.songfayuan.springBoot.controller.*.*(..))")
+	public void controllerAspect(){
+	}
+	
+	//声明service层切入点
+	@Pointcut("execution(* com.songfayuan.springBoot.service.*.*(..)) && !execution(* com.songfayuan.springBoot.service.LogService.*(..) )")
+	public void serviceAspect(){
+	}
+	
+	/**
+	 * 描述：声明前置通知-用于拦截Controller请求日志
+	 * @param joinPoint
+	 * @author songfayuan
+	 * 2017年12月14日下午1:31:12
+	 */
+	@Before("controllerAspect()")
+	public void doBefore(JoinPoint joinPoint){
+		HttpServletRequest request = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
+		try {
+			logger.info("【请求 URL】：{}", request.getRequestURL());
+			logger.info("【请求 IP】：{}", request.getRemoteAddr());
+			logger.info("【请求类名】：{}，【请求方法名】：{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+			Map parameterMap = request.getParameterMap();
+			logger.info("【请求参数】：{}，", JSONObject.toJSONString(parameterMap));
+			Long start = System.currentTimeMillis();
+			request.setAttribute(START_TIME, start);
+			// *========数据库日志=========*//
+			LogEntity log = new LogEntity();
+			log.setContent("【请求类名】:"+joinPoint.getSignature().getDeclaringTypeName()+",【请求方法名】："+joinPoint.getSignature().getName()); //此处记录请求类名和方法名，用户还可以自己自定义注解，记录每个方法的描述
+			log.setLogType(1061); //日志类型（1601信息，1602异常）
+			log.setUserId(0); //用户id-若完成登录功能后在此获取用户的id
+			// *========保存数据库=========*//
+			logger.info(".............Controller操作日志保存开始.............");
+			this.logService.save(log);
+			logger.info(".............Controller操作日志保存结束.............");
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("==前置通知异常==");
+			logger.error("【异常信息】：{}", e.getMessage());
+		}
+	}
+	
+	/**
+	 * 描述：声明环绕通知-用于返回请求数据
+	 * @param proceedingJoinPoint
+	 * @return
+	 * @throws Throwable
+	 * @author songfayuan
+	 * 2017年12月14日下午1:31:51
+	 */
+	@Around("controllerAspect()")
+	public Object arroundLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable{
+		Object result = proceedingJoinPoint.proceed();
+		logger.info("【返回值】：{}", JSONObject.toJSONString(result));
+		return result;
+	}
+	
+	/**
+	 * 描述：声明后置通知-用于记录请求时长
+	 * @param joinPoint
+	 * @author songfayuan
+	 * 2017年12月14日下午1:32:31
+	 */
+	@AfterReturning("controllerAspect()")
+	public void afterReturning(JoinPoint joinPoint){
+		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+		HttpServletRequest request = attributes.getRequest();
+		Long start = (Long) request.getAttribute(START_TIME);
+		Long end = System.currentTimeMillis();
+		try {
+			logger.info("【请求耗时】：{}毫秒", end - start);
+			String header = request.getHeader("User-Agent");
+			UserAgent userAgent = UserAgent.parseUserAgentString(header);
+			logger.info("【浏览器类型】：{}，【操作系统】：{}，【原始User-Agent】：{}", userAgent.getBrowser().toString(), userAgent.getOperatingSystem().toString(), header);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("==后置通知异常==");
+			logger.error("【异常信息】：{}", e.getMessage());
+		}
+	}
+	
+	/**
+	 * 描述：异常通知-用户拦截service层操作异常
+	 * @param joinPoint
+	 * @param e
+	 * @author songfayuan
+	 * 2017年12月14日下午2:01:12
+	 */
+	@AfterThrowing(pointcut = "serviceAspect()", throwing = "e")
+	public void doAfterThrowing(JoinPoint joinPoint, Throwable e){
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+		BigInteger time = new BigInteger(System.currentTimeMillis()+"");
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		String timestr = df.format(new Date(new Long(time+"")));
+		try {
+			logger.info("【请求时间】:" + timestr);
+			logger.info("【异常代码】:" + e.getClass().getName());
+			logger.info("【异常信息】:" + e.getMessage());
+			logger.info("【异常方法】:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
+			Map parameterMap = request.getParameterMap();
+			logger.info("【请求参数】：{}，", JSONObject.toJSONString(parameterMap));
+			// *========数据库日志=========*//
+			LogEntity log = new LogEntity();
+			log.setContent("【异常代码】:" + e.getClass().getName()+",【异常信息】:" + e.getMessage()+",【异常方法】:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()")+"。");
+			log.setLogType(1061); //日志类型（1601信息，1602异常）
+			log.setUserId(0); //用户id-若完成登录功能后在此获取用户的id
+			// *========保存数据库=========*//
+			logger.info(".............Controller操作日志保存开始.............");
+			this.logService.save(log);
+			logger.info(".............Controller操作日志保存结束.............");			
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			logger.error("==异常通知异常==");
+			logger.error("【异常信息】：{}", exception.getMessage());
+		}
+	}
+	
+}
+```
+
+### 读取用户操作日志
+创建LogController类
+```java
+package com.songfayuan.springBoot.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.songfayuan.springBoot.entity.LogEntity;
+import com.songfayuan.springBoot.entity.UserEntity;
+import com.songfayuan.springBoot.service.LogService;
+import com.songfayuan.springBoot.utils.Response;
+
+/**
+ * 描述：用户请求日志
+ * @author songfayuan
+ * 2017年12月14日下午3:23:18
+ */
+@RestController
+@RequestMapping("/log")
+public class LogController {
+	
+	Logger logger = LoggerFactory.getLogger(LogController.class);
+	
+	@Autowired
+	private LogService logService;
+	
+	/**
+	 * 描述：分页查询用户请求日志
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月14日下午3:27:41
+	 */
+	@RequestMapping("/findLogListByPage")
+	public Response findLogListByPage(Integer page, Integer pageSize){
+		return this.logService.findLogListByPage(page, pageSize);
+	}
+	
+	/**
+	 * 描述：查看日志详情
+	 * @param id
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月14日下午3:33:00
+	 */
+	@RequestMapping("/findLogById")
+	public Response findLogById(Integer id){
+		LogEntity logEntity = this.logService.findLogById(id);
+		return Response.success(logEntity);
+	}
+	
+}
+```
+
+创建LogService接口
+```java
+package com.songfayuan.springBoot.service;
+
+import com.songfayuan.springBoot.entity.LogEntity;
+import com.songfayuan.springBoot.utils.Response;
+
+/**
+ * 描述：
+ * @author songfayuan
+ * 2017年12月14日下午2:49:42
+ */
+public interface LogService {
+
+	/**
+	 * 描述：保存日志记录
+	 * @param log
+	 * @author songfayuan
+	 * 2017年12月14日下午3:10:34
+	 */
+	public void save(LogEntity log);
+
+	/**
+	 * 描述：分页查询用户请求日志
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月14日下午3:28:02
+	 */
+	public Response findLogListByPage(Integer page, Integer pageSize);
+
+	/**
+	 * 描述：查看日志详情
+	 * @param id
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月14日下午3:33:16
+	 */
+	public LogEntity findLogById(Integer id);
+
+}
+```
+
+创建LogServiceImpl类
+```java
+package com.songfayuan.springBoot.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.songfayuan.springBoot.dao.LogDao;
+import com.songfayuan.springBoot.entity.LogEntity;
+import com.songfayuan.springBoot.service.LogService;
+import com.songfayuan.springBoot.utils.Page;
+import com.songfayuan.springBoot.utils.Response;
+
+/**
+ * 描述：
+ * @author songfayuan
+ * 2017年12月14日下午2:50:02
+ */
+@Service
+public class LogServiceImpl implements LogService {
+	
+	@Autowired
+	private LogDao logDao;
+
+	@Override
+	public void save(LogEntity log) {
+		this.logDao.save(log);
+	}
+
+	@Override
+	public Response findLogListByPage(Integer page, Integer pageSize) {
+		Integer offset = page > 0 ? page * pageSize : 0;
+		List<LogEntity> list = this.logDao.findLogListByPage(offset, pageSize);
+		Integer rows = this.logDao.findRows();
+		Page<LogEntity> pagelist = new Page<>(page, pageSize, rows);
+		pagelist.setData(list);
+		return Response.success(pagelist);
+	}
+
+	@Override
+	public LogEntity findLogById(Integer id) {
+		return this.logDao.findLogById(id);
+	}
+
+}
+```
+
+创建LogDao接口
+```java
+package com.songfayuan.springBoot.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+
+import com.songfayuan.springBoot.entity.LogEntity;
+import com.songfayuan.springBoot.entity.UserEntity;
+
+/**
+ * 描述：
+ * @author songfayuan
+ * 2017年12月14日下午2:50:28
+ */
+public interface LogDao {
+
+	/**
+	 * 描述：保存日志记录
+	 * @param log
+	 * @author songfayuan
+	 * 2017年12月14日下午3:12:07
+	 */
+	@Insert("insert into log(log_type, content, user_id) values(#{logType}, #{content}, #{userId})")
+	public void save(LogEntity log);
+
+	/**
+	 * 描述：分页查询用户请求日志
+	 * @param offset
+	 * @param pageSize
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月14日下午3:29:31
+	 */
+	@Select("select * from log order by id desc limit #{offset},#{pageSize}")
+	public List<LogEntity> findLogListByPage(@Param("offset") Integer offset, @Param("pageSize") Integer pageSize);
+
+	/**
+	 * 描述：查询日志条数
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月14日下午3:30:54
+	 */
+	@Select("select count(id) from log")
+	public Integer findRows();
+
+	/**
+	 * 描述：查看日志详情
+	 * @param id
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月14日下午3:33:55
+	 */
+	@Select("select * from log where id = #{id}")
+	public LogEntity findLogById(Integer id);
+
+}
+```
 
 ===========【end】============
 * * *

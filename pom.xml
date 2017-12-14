@@ -78,6 +78,24 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<scope>runtime</scope>
 		</dependency> 
+		<!-- aop -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		<!-- json -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>1.2.8</version>
+		</dependency>
+		<!-- UserAgent工具类：https://mvnrepository.com/artifact/nl.bitwalker/UserAgentUtils -->
+		<dependency>
+		    <groupId>nl.bitwalker</groupId>
+		    <artifactId>UserAgentUtils</artifactId>
+		    <version>1.2.4</version>
+		</dependency>
+		
 		
 	</dependencies>
 
