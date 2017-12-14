@@ -1652,6 +1652,14 @@ public interface LogDao {
 }
 ```
 
+### 时间格式配置
+在application.properties中添加如下配置：
+```
+#时间戳统一转换
+spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
+spring.jackson.time-zone=GMT+8
+```
+
 ===========【end】============
 * * *
 ### 更多的功能正在编辑中...
