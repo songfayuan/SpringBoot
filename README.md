@@ -1660,6 +1660,14 @@ public interface LogDao {
 
 [示例代码-github](https://github.com/songfayuan/spring-boot)
 
+## 如果喜欢，请多多分享、多多Star
+
+### 作者信息
+
+- 作者博客：http://blog.csdn.net/u011019141
+
+- 作者邮箱：1414798079@qq.com
+
 ### 打赏
 分享不易，开心的话，可以请我喝杯咖啡哦O(∩_∩)O~
 
