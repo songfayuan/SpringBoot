@@ -10,10 +10,55 @@ Target Server Type    : MYSQL
 Target Server Version : 50717
 File Encoding         : 65001
 
-Date: 2017-12-13 21:46:26
+Date: 2017-12-14 16:54:13
 */
 
 SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for log
+-- ----------------------------
+DROP TABLE IF EXISTS `log`;
+CREATE TABLE `log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '日志id',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '日志产生时间',
+  `log_type` int(11) DEFAULT NULL COMMENT '日志类型（1601信息，1602异常）',
+  `content` text COMMENT '日志内容',
+  `user_id` int(11) DEFAULT NULL COMMENT '操作人员',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8 COMMENT='日志表';
+
+-- ----------------------------
+-- Records of log
+-- ----------------------------
+INSERT INTO `log` VALUES ('1', '2017-12-14 15:35:22', '1061', '【请求类名】:com.songfayuan.springBoot.controller.UserController,【请求方法名】：findUserListByPage', '0');
+INSERT INTO `log` VALUES ('2', '2017-12-14 15:36:34', '1061', '【请求类名】:com.songfayuan.springBoot.controller.UserController,【请求方法名】：findUserListByPage', '0');
+INSERT INTO `log` VALUES ('3', '2017-12-14 15:38:10', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('4', '2017-12-14 15:38:20', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('5', '2017-12-14 15:38:32', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('6', '2017-12-14 15:40:46', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('7', '2017-12-14 15:41:09', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('8', '2017-12-14 15:41:38', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('9', '2017-12-14 15:41:48', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('10', '2017-12-14 15:43:03', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('11', '2017-12-14 15:43:03', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('12', '2017-12-14 15:43:03', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('13', '2017-12-14 15:43:03', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('14', '2017-12-14 15:43:03', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('15', '2017-12-14 15:43:03', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('16', '2017-12-14 15:48:41', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('17', '2017-12-14 15:48:42', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('18', '2017-12-14 15:48:42', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('19', '2017-12-14 15:48:43', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('20', '2017-12-14 15:49:44', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('21', '2017-12-14 15:49:45', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('22', '2017-12-14 15:49:46', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogById', '0');
+INSERT INTO `log` VALUES ('24', '2017-12-14 15:51:41', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('25', '2017-12-14 15:55:21', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('26', '2017-12-14 15:56:36', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('27', '2017-12-14 15:57:53', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('28', '2017-12-14 15:58:44', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
+INSERT INTO `log` VALUES ('29', '2017-12-14 16:44:25', '1061', '【请求类名】:com.songfayuan.springBoot.controller.LogController,【请求方法名】：findLogListByPage', '0');
 
 -- ----------------------------
 -- Table structure for user
