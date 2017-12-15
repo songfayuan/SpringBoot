@@ -92,7 +92,7 @@ public class RequestLogAspect {
 			// *========数据库日志=========*//
 			LogEntity log = new LogEntity();
 			if (getControllerMethodDescription(joinPoint)!=null) {
-				log.setContent("【方法描述】:"+getControllerMethodDescription(joinPoint)); //己自定义注解，记录每个方法的描述
+				log.setContent(getControllerMethodDescription(joinPoint)); //己自定义注解，记录每个方法的描述
 			}else {
 				log.setContent("【请求类名】:"+joinPoint.getSignature().getDeclaringTypeName()+",【请求方法名】："+joinPoint.getSignature().getName()+"【方法描述】：none");
 			}

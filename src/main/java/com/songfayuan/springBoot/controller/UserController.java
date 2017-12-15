@@ -54,6 +54,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午5:54:41
 	 */
+	@ControllerMethodDescription(description="根据id获取一条用户数据")
 	@RequestMapping("/findUserById")
 	public Response findUserById(Integer userId){
 		UserEntity user = this.userService.findUserById(userId);
@@ -67,6 +68,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午6:12:05
 	 */
+	@ControllerMethodDescription(description="添加用户")
 	@RequestMapping("/addUser")
 	public Response saveUser(UserEntity user){
 		this.userService.saveUser(user);
@@ -80,6 +82,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午6:19:52
 	 */
+	@ControllerMethodDescription(description="根据id更新用户数据")
 	@RequestMapping("/updateUser")
 	public Response updateUser(UserEntity user){
 		this.userService.updateUser(user);
@@ -93,6 +96,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午8:14:05
 	 */
+	@ControllerMethodDescription(description="根据id删除用户数据")
 	@RequestMapping("/deleteUserById")
 	public Response deleteUser(Integer userId){
 		this.userService.deleteUser(userId);
@@ -105,6 +109,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午9:02:10
 	 */
+	@ControllerMethodDescription(description="查询用户数")
 	@RequestMapping("/getUserCount")
 	public Response getUserCount(){
 		Integer rows = this.userService.getUserCount();
@@ -119,6 +124,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午9:25:11
 	 */
+	@ControllerMethodDescription(description="分页查询用户列表")
 	@RequestMapping("/findUserListByPage")
 	public Response findUserListByPage(Integer page, Integer pageSize){
 		return this.userService.findUserListByPage(page, pageSize);
