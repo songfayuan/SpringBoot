@@ -1660,6 +1660,93 @@ spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
 spring.jackson.time-zone=GMT+8
 ```
 
+## 自定义注解
+### 声明注解
+自定义注解为方法添加方法描述并记录进操作日志，首先在com.songfayuan.springBoot.annotation下创建注解类ControllerMethodDescription，代码如下：
+```java
+package com.songfayuan.springBoot.annotation;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+@Documented
+@Retention(RUNTIME)
+@Target(METHOD)
+/**
+ * 描述：自定义注解-用于添加Controller方法描述
+ * @author songfayuan
+ * 2017年12月15日上午10:36:37
+ */
+public @interface ControllerMethodDescription {
+	
+	/**
+	 * 描述：方法描述
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月15日上午10:40:56
+	 */
+	String description() default "controller method default description...";
+	
+}
+```
+接下来在之前的切面RequestLogAspect中添加如下方法：
+```java
+	/**
+	 * 描述：获取注解中对方法的描述信息-用于Controller层注解
+	 * @param joinPoint
+	 * @return
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @author songfayuan
+	 * 2017年12月15日上午11:36:55
+	 */
+	public static String getControllerMethodDescription(JoinPoint joinPoint) throws NoSuchMethodException, SecurityException {
+		//获取拦截的方法名
+		Signature signature = joinPoint.getSignature();
+		MethodSignature mSignature = null;
+		if (!(signature instanceof MethodSignature)) {
+			logger.error("ControllerMethodDescription注解只能用于方法");
+			throw new IllegalArgumentException("ControllerMethodDescription注解只能用于方法");
+		}
+		mSignature = (MethodSignature) signature;
+		Object target = joinPoint.getTarget();
+		//获取拦截方法的参数
+		Method method = target.getClass().getMethod(mSignature.getName(), mSignature.getParameterTypes());
+		//获取操作业务的名称
+		ControllerMethodDescription annotation = method.getAnnotation(ControllerMethodDescription.class);
+		String description = null;
+		if (annotation!=null) {
+			description = annotation.description();
+		}
+		return description;
+	}
+```
+再修改下RequestLogAspect中的前置通知代码，具体请查看源码。
+
+### 使用注解
+在Controller中的接口方法前加上我们刚自定义好的注解，添加上方法描述即可，如：
+```java
+	/**
+	 * 描述：查询所有用户列表（不分页）
+	 * @return
+	 * @author songfayuan
+	 * 2017年12月13日下午5:40:01
+	 */
+	@ControllerMethodDescription(description="查询所有用户列表（不分页）")   //自定义注解：用于拦截方法描述，若不用不写此注解即可
+	@RequestMapping("/findUserList")
+	public Response findUserList(){
+		List<UserEntity> list =  this.userService.findUserList();
+		return Response.success(list);
+	}
+```
+
+
+
+
 ===========【end】============
 * * *
 ### 更多的功能正在编辑中...

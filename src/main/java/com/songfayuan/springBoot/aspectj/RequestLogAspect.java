@@ -7,6 +7,7 @@
  */
 package com.songfayuan.springBoot.aspectj;
 
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,20 +17,24 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.alibaba.fastjson.JSONObject;
+import com.songfayuan.springBoot.annotation.ControllerMethodDescription;
 import com.songfayuan.springBoot.entity.LogEntity;
 import com.songfayuan.springBoot.service.LogService;
 
@@ -44,6 +49,7 @@ import nl.bitwalker.useragentutils.UserAgent;
  */
 @Aspect
 @Service
+@Order(0)
 public class RequestLogAspect {
 	
 	private static final String START_TIME = "start_request_time";
@@ -75,15 +81,21 @@ public class RequestLogAspect {
 		HttpServletRequest request = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
 		try {
 			logger.info("【请求 URL】：{}", request.getRequestURL());
+			logger.info("【请求方式】：{}", request.getMethod());
 			logger.info("【请求 IP】：{}", request.getRemoteAddr());
 			logger.info("【请求类名】：{}，【请求方法名】：{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+			logger.info("【方法描述】：{}", getControllerMethodDescription(joinPoint));
 			Map parameterMap = request.getParameterMap();
 			logger.info("【请求参数】：{}，", JSONObject.toJSONString(parameterMap));
 			Long start = System.currentTimeMillis();
 			request.setAttribute(START_TIME, start);
 			// *========数据库日志=========*//
 			LogEntity log = new LogEntity();
-			log.setContent("【请求类名】:"+joinPoint.getSignature().getDeclaringTypeName()+",【请求方法名】："+joinPoint.getSignature().getName()); //此处记录请求类名和方法名，用户还可以自己自定义注解，记录每个方法的描述
+			if (getControllerMethodDescription(joinPoint)!=null) {
+				log.setContent("【方法描述】:"+getControllerMethodDescription(joinPoint)); //己自定义注解，记录每个方法的描述
+			}else {
+				log.setContent("【请求类名】:"+joinPoint.getSignature().getDeclaringTypeName()+",【请求方法名】："+joinPoint.getSignature().getName()+"【方法描述】：none");
+			}
 			log.setLogType(1061); //日志类型（1601信息，1602异常）
 			log.setUserId(0); //用户id-若完成登录功能后在此获取用户的id
 			// *========保存数据库=========*//
@@ -150,10 +162,11 @@ public class RequestLogAspect {
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 		String timestr = df.format(new Date(new Long(time+"")));
 		try {
-			logger.info("【请求时间】:" + timestr);
-			logger.info("【异常代码】:" + e.getClass().getName());
-			logger.info("【异常信息】:" + e.getMessage());
-			logger.info("【异常方法】:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
+			logger.info("【请求时间】:{}" + timestr);
+			logger.info("【请求方式】：{}", request.getMethod());
+			logger.info("【异常代码】:{}" + e.getClass().getName());
+			logger.info("【异常信息】:{}" + e.getMessage());
+			logger.info("【异常方法】:{}" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
 			Map parameterMap = request.getParameterMap();
 			logger.info("【请求参数】：{}，", JSONObject.toJSONString(parameterMap));
 			// *========数据库日志=========*//
@@ -170,6 +183,36 @@ public class RequestLogAspect {
 			logger.error("==异常通知异常==");
 			logger.error("【异常信息】：{}", exception.getMessage());
 		}
+	}
+	
+	/**
+	 * 描述：获取注解中对方法的描述信息-用于Controller层注解
+	 * @param joinPoint
+	 * @return
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @author songfayuan
+	 * 2017年12月15日上午11:36:55
+	 */
+	public static String getControllerMethodDescription(JoinPoint joinPoint) throws NoSuchMethodException, SecurityException {
+		//获取拦截的方法名
+		Signature signature = joinPoint.getSignature();
+		MethodSignature mSignature = null;
+		if (!(signature instanceof MethodSignature)) {
+			logger.error("ControllerMethodDescription注解只能用于方法");
+			throw new IllegalArgumentException("ControllerMethodDescription注解只能用于方法");
+		}
+		mSignature = (MethodSignature) signature;
+		Object target = joinPoint.getTarget();
+		//获取拦截方法的参数
+		Method method = target.getClass().getMethod(mSignature.getName(), mSignature.getParameterTypes());
+		//获取操作业务的名称
+		ControllerMethodDescription annotation = method.getAnnotation(ControllerMethodDescription.class);
+		String description = null;
+		if (annotation!=null) {
+			description = annotation.description();
+		}
+		return description;
 	}
 	
 }

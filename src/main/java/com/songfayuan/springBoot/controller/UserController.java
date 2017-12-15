@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.songfayuan.springBoot.annotation.ControllerMethodDescription;
 import com.songfayuan.springBoot.entity.UserEntity;
 import com.songfayuan.springBoot.service.UserService;
 import com.songfayuan.springBoot.utils.Response;
@@ -39,6 +40,7 @@ public class UserController {
 	 * @author songfayuan
 	 * 2017年12月13日下午5:40:01
 	 */
+	@ControllerMethodDescription(description="查询所有用户列表（不分页）")   //自定义注解：用于拦截方法描述，若不用不写此注解即可
 	@RequestMapping("/findUserList")
 	public Response findUserList(){
 		List<UserEntity> list =  this.userService.findUserList();
