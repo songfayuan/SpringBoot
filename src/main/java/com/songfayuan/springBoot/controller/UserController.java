@@ -9,6 +9,7 @@ package com.songfayuan.springBoot.controller;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import com.songfayuan.springBoot.annotation.ControllerMethodDescription;
 import com.songfayuan.springBoot.entity.UserEntity;
 import com.songfayuan.springBoot.service.UserService;
 import com.songfayuan.springBoot.utils.Response;
+import com.songfayuan.springBoot.utils.regular.Regular;
 
 /**
  * 描述：用户
@@ -57,6 +59,9 @@ public class UserController {
 	@ControllerMethodDescription(description="根据id获取一条用户数据")
 	@RequestMapping("/findUserById")
 	public Response findUserById(Integer userId){
+		if (userId == null) {
+			return Response.errorResponse("参数异常");
+		}
 		UserEntity user = this.userService.findUserById(userId);
 		return Response.success(user);
 	}
@@ -71,6 +76,20 @@ public class UserController {
 	@ControllerMethodDescription(description="添加用户")
 	@RequestMapping("/addUser")
 	public Response saveUser(UserEntity user){
+		if (StringUtils.isBlank(user.getUserName())) {
+			return Response.errorResponse("用户名不能为空");
+		}
+		if (StringUtils.isBlank(user.getPhone())) {
+			return Response.errorResponse("手机号不能为空");
+		}
+		if (!Regular.checkPhone(user.getPhone())) {
+			return Response.errorResponse("手机号码不正确");
+		}
+		if (StringUtils.isNotBlank(user.getEmail())) {
+			if (!Regular.checkEmail(user.getEmail())) {
+				return Response.errorResponse("邮箱格式不正确");
+			}
+		}
 		this.userService.saveUser(user);
 		return Response.successResponse("添加成功");
 	}
@@ -85,6 +104,23 @@ public class UserController {
 	@ControllerMethodDescription(description="根据id更新用户数据")
 	@RequestMapping("/updateUser")
 	public Response updateUser(UserEntity user){
+		if (user.getId() == null) {
+			return Response.errorResponse("参数异常");
+		}
+		if (StringUtils.isBlank(user.getUserName())) {
+			return Response.errorResponse("用户名不能为空");
+		}
+		if (StringUtils.isBlank(user.getPhone())) {
+			return Response.errorResponse("手机号不能为空");
+		}
+		if (!Regular.checkPhone(user.getPhone())) {
+			return Response.errorResponse("手机号码不正确");
+		}
+		if (StringUtils.isNotBlank(user.getEmail())) {
+			if (!Regular.checkEmail(user.getEmail())) {
+				return Response.errorResponse("邮箱格式不正确");
+			}
+		}
 		this.userService.updateUser(user);
 		return Response.successResponse("修改成功");
 	}
@@ -99,6 +135,9 @@ public class UserController {
 	@ControllerMethodDescription(description="根据id删除用户数据")
 	@RequestMapping("/deleteUserById")
 	public Response deleteUser(Integer userId){
+		if (userId == null) {
+			return Response.errorResponse("参数异常");
+		}
 		this.userService.deleteUser(userId);
 		return Response.successResponse("删除成功");
 	}
@@ -127,6 +166,8 @@ public class UserController {
 	@ControllerMethodDescription(description="分页查询用户列表")
 	@RequestMapping("/findUserListByPage")
 	public Response findUserListByPage(Integer page, Integer pageSize){
+		page = page == null ? 0 : page;
+		pageSize = pageSize == null ? 20 : pageSize;
 		return this.userService.findUserListByPage(page, pageSize);
 	}
 	

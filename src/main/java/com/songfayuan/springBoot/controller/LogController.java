@@ -44,6 +44,8 @@ public class LogController {
 	@ControllerMethodDescription(description="分页查询用户请求日志")
 	@RequestMapping("/findLogListByPage")
 	public Response findLogListByPage(Integer page, Integer pageSize){
+		page = page == null ? 0 : page;
+		pageSize = pageSize == null ? 20 : pageSize;
 		return this.logService.findLogListByPage(page, pageSize);
 	}
 	
@@ -57,6 +59,9 @@ public class LogController {
 	@ControllerMethodDescription(description="查看日志详情")
 	@RequestMapping("/findLogById")
 	public Response findLogById(Integer id){
+		if (id == null) {
+			return Response.errorResponse("参数异常");
+		}
 		LogEntity logEntity = this.logService.findLogById(id);
 		return Response.success(logEntity);
 	}
